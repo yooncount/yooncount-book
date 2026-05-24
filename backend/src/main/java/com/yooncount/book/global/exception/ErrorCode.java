@@ -41,7 +41,7 @@ public enum ErrorCode {
     // Finnhub
     FINNHUB_API_KEY_NOT_CONFIGURED(HttpStatus.SERVICE_UNAVAILABLE,
             "Finnhub API 키가 설정되지 않았습니다. " +
-            "application-local.yml의 finnhub.api-key를 설정해주세요. " +
+            "앱 설정 페이지에서 API 키를 등록해주세요. " +
             "(https://finnhub.io 에서 무료 발급 가능)"),
 
     // GitHub

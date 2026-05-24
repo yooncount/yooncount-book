@@ -13,6 +13,7 @@ import {
   Landmark,
   Wallet,
   Tag,
+  Settings,
 } from 'lucide-react'
 
 const navItems = [
@@ -28,6 +29,7 @@ const navItems = [
   { to: '/loans', icon: Landmark, label: '대출' },
   { to: '/net-worth', icon: Wallet, label: '자산 현황' },
   { to: '/categories', icon: Tag, label: '카테고리' },
+  { to: '/settings', icon: Settings, label: '설정' },
 ]
 
 const Sidebar: React.FC = () => {

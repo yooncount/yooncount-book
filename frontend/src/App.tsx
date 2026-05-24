@@ -12,6 +12,7 @@ import Investment from './pages/Investment'
 import TradingJournal from './pages/TradingJournal'
 import Loans from './pages/Loans'
 import NetWorth from './pages/NetWorth'
+import Settings from './pages/Settings'
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="journal" element={<TradingJournal />} />
           <Route path="loans" element={<Loans />} />
           <Route path="net-worth" element={<NetWorth />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>
     </BrowserRouter>

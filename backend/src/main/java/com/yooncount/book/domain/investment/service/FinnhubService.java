@@ -1,7 +1,7 @@
 package com.yooncount.book.domain.investment.service;
 
 import com.yooncount.book.domain.investment.dto.StockQuoteResponse;
-import com.yooncount.book.global.config.FinnhubProperties;
+import com.yooncount.book.domain.setting.service.AppSettingService;
 import com.yooncount.book.global.exception.BusinessException;
 import com.yooncount.book.global.exception.ErrorCode;
 import org.springframework.stereotype.Service;
@@ -15,24 +15,23 @@ public class FinnhubService {
 
     private static final String BASE_URL = "https://finnhub.io/api/v1";
 
-    private final FinnhubProperties properties;
+    private final AppSettingService appSettingService;
     private final RestClient restClient;
 
-    public FinnhubService(FinnhubProperties properties) {
-        this.properties = properties;
+    public FinnhubService(AppSettingService appSettingService) {
+        this.appSettingService = appSettingService;
         this.restClient = RestClient.builder()
                 .baseUrl(BASE_URL)
                 .build();
     }
 
     public StockQuoteResponse getQuote(String ticker, String stockName) {
-        if (!properties.isConfigured()) {
-            throw new BusinessException(ErrorCode.FINNHUB_API_KEY_NOT_CONFIGURED);
-        }
+        String apiKey = appSettingService.get(AppSettingService.KEY_FINNHUB_API_KEY)
+                .orElseThrow(() -> new BusinessException(ErrorCode.FINNHUB_API_KEY_NOT_CONFIGURED));
 
         @SuppressWarnings("unchecked")
         Map<String, Object> body = restClient.get()
-                .uri("/quote?symbol={ticker}&token={key}", ticker.toUpperCase(), properties.getApiKey())
+                .uri("/quote?symbol={ticker}&token={key}", ticker.toUpperCase(), apiKey)
                 .retrieve()
                 .body(Map.class);
 
