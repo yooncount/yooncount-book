@@ -1,13 +1,17 @@
 package com.yooncount.book.domain.journal.entity;
 
 import com.yooncount.book.domain.investment.entity.TradeType;
+import com.yooncount.book.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -23,6 +27,10 @@ public class TradingJournal {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User owner;
 
     @Column(nullable = false, length = 20)
     private String ticker;
@@ -62,9 +70,10 @@ public class TradingJournal {
 
     protected TradingJournal() {}
 
-    public TradingJournal(String ticker, String stockName, TradeType tradeType,
+    public TradingJournal(User owner, String ticker, String stockName, TradeType tradeType,
                           LocalDate tradeDate, int quantity, BigDecimal price,
                           String reason, String strategy, String reflection) {
+        this.owner = owner;
         this.ticker = ticker.toUpperCase();
         this.stockName = stockName;
         this.tradeType = tradeType;
@@ -87,6 +96,7 @@ public class TradingJournal {
     }
 
     public Long getId() { return id; }
+    public User getOwner() { return owner; }
     public String getTicker() { return ticker; }
     public String getStockName() { return stockName; }
     public TradeType getTradeType() { return tradeType; }

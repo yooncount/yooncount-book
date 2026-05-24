@@ -9,6 +9,8 @@ import com.yooncount.book.domain.transaction.dto.TransactionResponse;
 import com.yooncount.book.domain.transaction.dto.TransactionUpdateRequest;
 import com.yooncount.book.domain.transaction.entity.Transaction;
 import com.yooncount.book.domain.transaction.repository.TransactionRepository;
+import com.yooncount.book.domain.user.entity.User;
+import com.yooncount.book.domain.user.repository.UserRepository;
 import com.yooncount.book.global.common.TransactionType;
 import com.yooncount.book.global.exception.BusinessException;
 import com.yooncount.book.global.exception.ErrorCode;
@@ -25,62 +27,66 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
     private final PaymentMethodRepository paymentMethodRepository;
+    private final UserRepository userRepository;
 
     public TransactionService(TransactionRepository transactionRepository,
                                CategoryRepository categoryRepository,
-                               PaymentMethodRepository paymentMethodRepository) {
+                               PaymentMethodRepository paymentMethodRepository,
+                               UserRepository userRepository) {
         this.transactionRepository = transactionRepository;
         this.categoryRepository = categoryRepository;
         this.paymentMethodRepository = paymentMethodRepository;
+        this.userRepository = userRepository;
     }
 
-    public List<TransactionResponse> findAll(int year, int month,
+    public List<TransactionResponse> findAll(Long ownerId, int year, int month,
                                               TransactionType type, Long categoryId) {
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
-        return transactionRepository.findByFilter(startDate, endDate, type, categoryId)
+        return transactionRepository.findByFilter(ownerId, startDate, endDate, type, categoryId)
                 .stream()
                 .map(TransactionResponse::from)
                 .toList();
     }
 
     @Transactional
-    public TransactionResponse create(TransactionCreateRequest request) {
-        Category category = findCategory(request.categoryId());
-        PaymentMethod paymentMethod = resolvePaymentMethod(request.paymentMethodId());
+    public TransactionResponse create(Long ownerId, TransactionCreateRequest request) {
+        User owner = userRepository.getReferenceById(ownerId);
+        Category category = findCategory(ownerId, request.categoryId());
+        PaymentMethod paymentMethod = resolvePaymentMethod(ownerId, request.paymentMethodId());
         Transaction transaction = new Transaction(
-                request.amount(), request.type(), category,
+                owner, request.amount(), request.type(), category,
                 paymentMethod, request.description(), request.transactionDate()
         );
         return TransactionResponse.from(transactionRepository.save(transaction));
     }
 
     @Transactional
-    public TransactionResponse update(Long id, TransactionUpdateRequest request) {
-        Transaction transaction = transactionRepository.findById(id)
+    public TransactionResponse update(Long ownerId, Long id, TransactionUpdateRequest request) {
+        Transaction transaction = transactionRepository.findByIdAndOwnerId(id, ownerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRANSACTION_NOT_FOUND));
-        Category category = findCategory(request.categoryId());
-        PaymentMethod paymentMethod = resolvePaymentMethod(request.paymentMethodId());
+        Category category = findCategory(ownerId, request.categoryId());
+        PaymentMethod paymentMethod = resolvePaymentMethod(ownerId, request.paymentMethodId());
         transaction.update(request.amount(), request.type(), category,
                 paymentMethod, request.description(), request.transactionDate());
         return TransactionResponse.from(transaction);
     }
 
     @Transactional
-    public void delete(Long id) {
-        Transaction transaction = transactionRepository.findById(id)
+    public void delete(Long ownerId, Long id) {
+        Transaction transaction = transactionRepository.findByIdAndOwnerId(id, ownerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRANSACTION_NOT_FOUND));
         transactionRepository.delete(transaction);
     }
 
-    private Category findCategory(Long categoryId) {
-        return categoryRepository.findById(categoryId)
+    private Category findCategory(Long ownerId, Long categoryId) {
+        return categoryRepository.findByIdAndOwnerId(categoryId, ownerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 
-    private PaymentMethod resolvePaymentMethod(Long paymentMethodId) {
+    private PaymentMethod resolvePaymentMethod(Long ownerId, Long paymentMethodId) {
         if (paymentMethodId == null) return null;
-        return paymentMethodRepository.findById(paymentMethodId)
+        return paymentMethodRepository.findByIdAndOwnerId(paymentMethodId, ownerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_METHOD_NOT_FOUND));
     }
 }

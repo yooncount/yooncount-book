@@ -5,12 +5,14 @@ import com.yooncount.book.domain.journal.dto.TradingJournalRequest;
 import com.yooncount.book.domain.journal.dto.TradingJournalResponse;
 import com.yooncount.book.domain.journal.service.TradingJournalService;
 import com.yooncount.book.global.common.ApiResponse;
+import com.yooncount.book.global.security.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,40 +41,48 @@ public class TradingJournalController {
     @Operation(summary = "매매 일지 목록 조회",
                description = "ticker, tradeType, 날짜 범위로 필터링할 수 있습니다.")
     public ResponseEntity<ApiResponse<List<TradingJournalResponse>>> getJournals(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
             @RequestParam(required = false) String ticker,
             @RequestParam(required = false) TradeType tradeType,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return ResponseEntity.ok(ApiResponse.ok(journalService.getJournals(ticker, tradeType, startDate, endDate)));
+        return ResponseEntity.ok(ApiResponse.ok(
+                journalService.getJournals(principal.getId(), ticker, tradeType, startDate, endDate)));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "매매 일지 단건 조회")
-    public ResponseEntity<ApiResponse<TradingJournalResponse>> getJournal(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.ok(journalService.getJournal(id)));
+    public ResponseEntity<ApiResponse<TradingJournalResponse>> getJournal(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
+            @PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.ok(journalService.getJournal(principal.getId(), id)));
     }
 
     @PostMapping
     @Operation(summary = "매매 일지 작성")
     public ResponseEntity<ApiResponse<TradingJournalResponse>> create(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
             @RequestBody @Valid TradingJournalRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok(journalService.create(request)));
+                .body(ApiResponse.ok(journalService.create(principal.getId(), request)));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "매매 일지 수정",
                description = "매수/매도 후 reflection(회고)을 추가하거나 내용을 수정합니다.")
     public ResponseEntity<ApiResponse<TradingJournalResponse>> update(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
             @PathVariable Long id,
             @RequestBody @Valid TradingJournalRequest request) {
-        return ResponseEntity.ok(ApiResponse.ok(journalService.update(id, request)));
+        return ResponseEntity.ok(ApiResponse.ok(journalService.update(principal.getId(), id, request)));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "매매 일지 삭제")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
-        journalService.delete(id);
+    public ResponseEntity<ApiResponse<Void>> delete(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
+            @PathVariable Long id) {
+        journalService.delete(principal.getId(), id);
         return ResponseEntity.ok(ApiResponse.ok());
     }
 }

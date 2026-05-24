@@ -1,6 +1,7 @@
 package com.yooncount.book.domain.budget.entity;
 
 import com.yooncount.book.domain.category.entity.Category;
+import com.yooncount.book.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -25,6 +26,10 @@ public class Budget {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User owner;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
@@ -47,7 +52,8 @@ public class Budget {
 
     protected Budget() {}
 
-    public Budget(Category category, int year, int month, BigDecimal amount) {
+    public Budget(User owner, Category category, int year, int month, BigDecimal amount) {
+        this.owner = owner;
         this.category = category;
         this.year = year;
         this.month = month;
@@ -59,6 +65,7 @@ public class Budget {
     }
 
     public Long getId() { return id; }
+    public User getOwner() { return owner; }
     public Category getCategory() { return category; }
     public int getYear() { return year; }
     public int getMonth() { return month; }

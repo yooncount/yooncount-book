@@ -1,10 +1,14 @@
 package com.yooncount.book.domain.savings.entity;
 
+import com.yooncount.book.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -20,6 +24,10 @@ public class SavingsGoal {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User owner;
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -49,8 +57,9 @@ public class SavingsGoal {
 
     protected SavingsGoal() {}
 
-    public SavingsGoal(String name, BigDecimal targetAmount, BigDecimal savedAmount,
+    public SavingsGoal(User owner, String name, BigDecimal targetAmount, BigDecimal savedAmount,
                        LocalDate targetDate, String memo) {
+        this.owner = owner;
         this.name = name;
         this.targetAmount = targetAmount;
         this.savedAmount = (savedAmount != null) ? savedAmount : BigDecimal.ZERO;
@@ -76,6 +85,7 @@ public class SavingsGoal {
     public void reopen()   { this.isCompleted = false; }
 
     public Long getId() { return id; }
+    public User getOwner() { return owner; }
     public String getName() { return name; }
     public BigDecimal getTargetAmount() { return targetAmount; }
     public BigDecimal getSavedAmount() { return savedAmount; }

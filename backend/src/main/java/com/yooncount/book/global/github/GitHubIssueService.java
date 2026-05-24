@@ -34,9 +34,9 @@ public class GitHubIssueService {
                 .build();
     }
 
-    public ErrorReportResponse createIssue(ErrorReportRequest request) {
+    public ErrorReportResponse createIssue(ErrorReportRequest request, String reporterEmail) {
         String title = "[BUG] " + truncate(request.description(), 60);
-        String body = buildIssueBody(request);
+        String body = buildIssueBody(request, reporterEmail);
 
         Map<?, ?> response;
         try {
@@ -56,8 +56,11 @@ public class GitHubIssueService {
         );
     }
 
-    private String buildIssueBody(ErrorReportRequest req) {
+    private String buildIssueBody(ErrorReportRequest req, String reporterEmail) {
         StringBuilder sb = new StringBuilder();
+        if (reporterEmail != null && !reporterEmail.isBlank()) {
+            sb.append("## 신고자\n").append(reporterEmail).append("\n\n");
+        }
         sb.append("## 버그 설명\n").append(req.description()).append("\n\n");
         sb.append("## 재현 방법\n").append(req.steps()).append("\n\n");
         sb.append("## 예상 결과\n").append(req.expected()).append("\n\n");

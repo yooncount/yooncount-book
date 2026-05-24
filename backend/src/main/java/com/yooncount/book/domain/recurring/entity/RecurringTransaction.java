@@ -2,6 +2,7 @@ package com.yooncount.book.domain.recurring.entity;
 
 import com.yooncount.book.domain.category.entity.Category;
 import com.yooncount.book.domain.payment.entity.PaymentMethod;
+import com.yooncount.book.domain.user.entity.User;
 import com.yooncount.book.global.common.TransactionType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,6 +29,10 @@ public class RecurringTransaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User owner;
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -72,9 +77,10 @@ public class RecurringTransaction {
 
     protected RecurringTransaction() {}
 
-    public RecurringTransaction(String name, TransactionType type, Category category,
+    public RecurringTransaction(User owner, String name, TransactionType type, Category category,
                                 PaymentMethod paymentMethod, BigDecimal amount, String description,
                                 int dayOfMonth, LocalDate startDate, LocalDate endDate) {
+        this.owner = owner;
         this.name = name;
         this.type = type;
         this.category = category;
@@ -104,6 +110,7 @@ public class RecurringTransaction {
     public void activate()   { this.isActive = true; }
 
     public Long getId() { return id; }
+    public User getOwner() { return owner; }
     public String getName() { return name; }
     public TransactionType getType() { return type; }
     public Category getCategory() { return category; }

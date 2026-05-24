@@ -5,11 +5,13 @@ import com.yooncount.book.domain.payment.dto.PaymentMethodResponse;
 import com.yooncount.book.domain.payment.dto.PaymentMethodStatsResponse;
 import com.yooncount.book.domain.payment.service.PaymentMethodService;
 import com.yooncount.book.global.common.ApiResponse;
+import com.yooncount.book.global.security.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,30 +39,35 @@ public class PaymentMethodController {
 
     @GetMapping
     @Operation(summary = "결제 수단 목록 조회")
-    public ResponseEntity<ApiResponse<List<PaymentMethodResponse>>> getAll() {
-        return ResponseEntity.ok(ApiResponse.ok(paymentMethodService.getAll()));
+    public ResponseEntity<ApiResponse<List<PaymentMethodResponse>>> getAll(
+            @AuthenticationPrincipal CustomUserPrincipal principal) {
+        return ResponseEntity.ok(ApiResponse.ok(paymentMethodService.getAll(principal.getId())));
     }
 
     @PostMapping
     @Operation(summary = "결제 수단 등록")
     public ResponseEntity<ApiResponse<PaymentMethodResponse>> create(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
             @RequestBody @Valid PaymentMethodRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok(paymentMethodService.create(request)));
+                .body(ApiResponse.ok(paymentMethodService.create(principal.getId(), request)));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "결제 수단 수정")
     public ResponseEntity<ApiResponse<PaymentMethodResponse>> update(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
             @PathVariable Long id,
             @RequestBody @Valid PaymentMethodRequest request) {
-        return ResponseEntity.ok(ApiResponse.ok(paymentMethodService.update(id, request)));
+        return ResponseEntity.ok(ApiResponse.ok(paymentMethodService.update(principal.getId(), id, request)));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "결제 수단 삭제")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
-        paymentMethodService.delete(id);
+    public ResponseEntity<ApiResponse<Void>> delete(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
+            @PathVariable Long id) {
+        paymentMethodService.delete(principal.getId(), id);
         return ResponseEntity.ok(ApiResponse.ok());
     }
 
@@ -68,10 +75,11 @@ public class PaymentMethodController {
     @Operation(summary = "결제 수단별 지출 통계",
                description = "특정 월의 결제 수단별 총 지출액과 카테고리별 내역을 조회합니다.")
     public ResponseEntity<ApiResponse<List<PaymentMethodStatsResponse>>> getStats(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer month) {
         int y = (year != null) ? year : LocalDate.now().getYear();
         int m = (month != null) ? month : LocalDate.now().getMonthValue();
-        return ResponseEntity.ok(ApiResponse.ok(paymentMethodService.getStats(y, m)));
+        return ResponseEntity.ok(ApiResponse.ok(paymentMethodService.getStats(principal.getId(), y, m)));
     }
 }

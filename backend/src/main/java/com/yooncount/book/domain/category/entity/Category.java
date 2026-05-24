@@ -1,13 +1,17 @@
 package com.yooncount.book.domain.category.entity;
 
+import com.yooncount.book.domain.user.entity.User;
 import com.yooncount.book.global.common.TransactionType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -22,7 +26,11 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User owner;
+
+    @Column(nullable = false, length = 50)
     private String name;
 
     @Enumerated(EnumType.STRING)
@@ -42,13 +50,15 @@ public class Category {
 
     protected Category() {}
 
-    public Category(String name, TransactionType type, boolean isDefault) {
+    public Category(User owner, String name, TransactionType type, boolean isDefault) {
+        this.owner = owner;
         this.name = name;
         this.type = type;
         this.isDefault = isDefault;
     }
 
     public Long getId() { return id; }
+    public User getOwner() { return owner; }
     public String getName() { return name; }
     public TransactionType getType() { return type; }
     public boolean isDefault() { return isDefault; }

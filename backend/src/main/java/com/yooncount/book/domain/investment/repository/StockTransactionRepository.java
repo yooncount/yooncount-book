@@ -3,17 +3,22 @@ package com.yooncount.book.domain.investment.repository;
 import com.yooncount.book.domain.investment.entity.StockTransaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface StockTransactionRepository extends JpaRepository<StockTransaction, Long> {
 
-    List<StockTransaction> findByTickerOrderByTradedAtAscCreatedAtAsc(String ticker);
+    Optional<StockTransaction> findByIdAndOwnerId(Long id, Long ownerId);
 
-    @Query("SELECT DISTINCT s.ticker FROM StockTransaction s ORDER BY s.ticker")
-    List<String> findAllTickers();
+    List<StockTransaction> findByTickerAndOwnerIdOrderByTradedAtAscCreatedAtAsc(String ticker, Long ownerId);
 
-    List<StockTransaction> findAllByOrderByTradedAtDescCreatedAtDesc();
+    @Query("SELECT DISTINCT s.ticker FROM StockTransaction s " +
+           "WHERE s.owner.id = :ownerId ORDER BY s.ticker")
+    List<String> findAllTickersByOwnerId(@Param("ownerId") Long ownerId);
 
-    List<StockTransaction> findByTickerOrderByTradedAtDescCreatedAtDesc(String ticker);
+    List<StockTransaction> findAllByOwnerIdOrderByTradedAtDescCreatedAtDesc(Long ownerId);
+
+    List<StockTransaction> findByTickerAndOwnerIdOrderByTradedAtDescCreatedAtDesc(String ticker, Long ownerId);
 }

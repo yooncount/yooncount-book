@@ -10,6 +10,8 @@ import com.yooncount.book.domain.recurring.entity.RecurringTransaction;
 import com.yooncount.book.domain.recurring.repository.RecurringTransactionRepository;
 import com.yooncount.book.domain.transaction.entity.Transaction;
 import com.yooncount.book.domain.transaction.repository.TransactionRepository;
+import com.yooncount.book.domain.user.entity.User;
+import com.yooncount.book.domain.user.repository.UserRepository;
 import com.yooncount.book.global.exception.BusinessException;
 import com.yooncount.book.global.exception.ErrorCode;
 import org.springframework.stereotype.Service;
@@ -26,30 +28,34 @@ public class RecurringTransactionService {
     private final CategoryRepository categoryRepository;
     private final PaymentMethodRepository paymentMethodRepository;
     private final TransactionRepository transactionRepository;
+    private final UserRepository userRepository;
 
     public RecurringTransactionService(RecurringTransactionRepository recurringRepository,
                                        CategoryRepository categoryRepository,
                                        PaymentMethodRepository paymentMethodRepository,
-                                       TransactionRepository transactionRepository) {
+                                       TransactionRepository transactionRepository,
+                                       UserRepository userRepository) {
         this.recurringRepository = recurringRepository;
         this.categoryRepository = categoryRepository;
         this.paymentMethodRepository = paymentMethodRepository;
         this.transactionRepository = transactionRepository;
+        this.userRepository = userRepository;
     }
 
-    public List<RecurringTransactionResponse> getAll() {
-        return recurringRepository.findAllWithDetails()
+    public List<RecurringTransactionResponse> getAll(Long ownerId) {
+        return recurringRepository.findAllWithDetails(ownerId)
                 .stream()
                 .map(RecurringTransactionResponse::from)
                 .toList();
     }
 
     @Transactional
-    public RecurringTransactionResponse create(RecurringTransactionRequest request) {
-        Category category = findCategory(request.categoryId());
-        PaymentMethod pm = resolvePaymentMethod(request.paymentMethodId());
+    public RecurringTransactionResponse create(Long ownerId, RecurringTransactionRequest request) {
+        User owner = userRepository.getReferenceById(ownerId);
+        Category category = findCategory(ownerId, request.categoryId());
+        PaymentMethod pm = resolvePaymentMethod(ownerId, request.paymentMethodId());
         RecurringTransaction recurring = new RecurringTransaction(
-                request.name(), request.type(), category, pm,
+                owner, request.name(), request.type(), category, pm,
                 request.amount(), request.description(),
                 request.dayOfMonth(), request.startDate(), request.endDate()
         );
@@ -57,10 +63,10 @@ public class RecurringTransactionService {
     }
 
     @Transactional
-    public RecurringTransactionResponse update(Long id, RecurringTransactionRequest request) {
-        RecurringTransaction recurring = findById(id);
-        Category category = findCategory(request.categoryId());
-        PaymentMethod pm = resolvePaymentMethod(request.paymentMethodId());
+    public RecurringTransactionResponse update(Long ownerId, Long id, RecurringTransactionRequest request) {
+        RecurringTransaction recurring = findByIdAndOwnerId(ownerId, id);
+        Category category = findCategory(ownerId, request.categoryId());
+        PaymentMethod pm = resolvePaymentMethod(ownerId, request.paymentMethodId());
         recurring.update(request.name(), request.type(), category, pm,
                 request.amount(), request.description(),
                 request.dayOfMonth(), request.startDate(), request.endDate());
@@ -68,8 +74,8 @@ public class RecurringTransactionService {
     }
 
     @Transactional
-    public RecurringTransactionResponse toggleActive(Long id) {
-        RecurringTransaction recurring = findById(id);
+    public RecurringTransactionResponse toggleActive(Long ownerId, Long id) {
+        RecurringTransaction recurring = findByIdAndOwnerId(ownerId, id);
         if (recurring.isActive()) recurring.deactivate();
         else recurring.activate();
         return RecurringTransactionResponse.from(recurring);
@@ -79,8 +85,8 @@ public class RecurringTransactionService {
      * 이번 달 실제 거래로 등록 — 해당 달 dayOfMonth 날짜로 Transaction 생성
      */
     @Transactional
-    public void applyToThisMonth(Long id) {
-        RecurringTransaction r = findById(id);
+    public void applyToThisMonth(Long ownerId, Long id) {
+        RecurringTransaction r = findByIdAndOwnerId(ownerId, id);
         if (!r.isActive()) throw new BusinessException(ErrorCode.RECURRING_TRANSACTION_NOT_FOUND);
 
         LocalDate now = LocalDate.now();
@@ -88,33 +94,33 @@ public class RecurringTransactionService {
         int day = Math.min(r.getDayOfMonth(), lastDay);
         LocalDate txDate = now.withDayOfMonth(day);
 
+        User owner = r.getOwner();
         Transaction tx = new Transaction(
-                r.getAmount(), r.getType(), r.getCategory(),
+                owner, r.getAmount(), r.getType(), r.getCategory(),
                 r.getPaymentMethod(), r.getDescription(), txDate
         );
         transactionRepository.save(tx);
     }
 
     @Transactional
-    public void delete(Long id) {
-        if (!recurringRepository.existsById(id))
-            throw new BusinessException(ErrorCode.RECURRING_TRANSACTION_NOT_FOUND);
-        recurringRepository.deleteById(id);
+    public void delete(Long ownerId, Long id) {
+        RecurringTransaction recurring = findByIdAndOwnerId(ownerId, id);
+        recurringRepository.delete(recurring);
     }
 
-    private RecurringTransaction findById(Long id) {
-        return recurringRepository.findById(id)
+    private RecurringTransaction findByIdAndOwnerId(Long ownerId, Long id) {
+        return recurringRepository.findByIdAndOwnerId(id, ownerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RECURRING_TRANSACTION_NOT_FOUND));
     }
 
-    private Category findCategory(Long categoryId) {
-        return categoryRepository.findById(categoryId)
+    private Category findCategory(Long ownerId, Long categoryId) {
+        return categoryRepository.findByIdAndOwnerId(categoryId, ownerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 
-    private PaymentMethod resolvePaymentMethod(Long pmId) {
+    private PaymentMethod resolvePaymentMethod(Long ownerId, Long pmId) {
         if (pmId == null) return null;
-        return paymentMethodRepository.findById(pmId)
+        return paymentMethodRepository.findByIdAndOwnerId(pmId, ownerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_METHOD_NOT_FOUND));
     }
 }

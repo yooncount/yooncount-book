@@ -2,6 +2,7 @@ package com.yooncount.book.domain.transaction.entity;
 
 import com.yooncount.book.domain.category.entity.Category;
 import com.yooncount.book.domain.payment.entity.PaymentMethod;
+import com.yooncount.book.domain.user.entity.User;
 import com.yooncount.book.global.common.TransactionType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,6 +29,10 @@ public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User owner;
 
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
@@ -60,8 +65,9 @@ public class Transaction {
 
     protected Transaction() {}
 
-    public Transaction(BigDecimal amount, TransactionType type, Category category,
+    public Transaction(User owner, BigDecimal amount, TransactionType type, Category category,
                        PaymentMethod paymentMethod, String description, LocalDate transactionDate) {
+        this.owner = owner;
         this.amount = amount;
         this.type = type;
         this.category = category;
@@ -81,6 +87,7 @@ public class Transaction {
     }
 
     public Long getId() { return id; }
+    public User getOwner() { return owner; }
     public BigDecimal getAmount() { return amount; }
     public TransactionType getType() { return type; }
     public Category getCategory() { return category; }

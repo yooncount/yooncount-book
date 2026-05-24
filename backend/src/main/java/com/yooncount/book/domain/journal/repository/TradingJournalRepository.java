@@ -8,16 +8,21 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface TradingJournalRepository extends JpaRepository<TradingJournal, Long> {
 
+    Optional<TradingJournal> findByIdAndOwnerId(Long id, Long ownerId);
+
     @Query("SELECT j FROM TradingJournal j " +
-           "WHERE (:ticker IS NULL OR j.ticker = :ticker) " +
+           "WHERE j.owner.id = :ownerId " +
+           "AND (:ticker IS NULL OR j.ticker = :ticker) " +
            "AND (:tradeType IS NULL OR j.tradeType = :tradeType) " +
            "AND (:startDate IS NULL OR j.tradeDate >= :startDate) " +
            "AND (:endDate IS NULL OR j.tradeDate <= :endDate) " +
            "ORDER BY j.tradeDate DESC, j.createdAt DESC")
     List<TradingJournal> findByFilter(
+            @Param("ownerId")   Long ownerId,
             @Param("ticker")    String ticker,
             @Param("tradeType") TradeType tradeType,
             @Param("startDate") LocalDate startDate,

@@ -27,11 +27,11 @@ public class StatisticsService {
         this.transactionRepository = transactionRepository;
     }
 
-    public MonthlyStatisticsResponse getMonthlyStatistics(int year, int month) {
+    public MonthlyStatisticsResponse getMonthlyStatistics(Long ownerId, int year, int month) {
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
-        List<Object[]> rows = transactionRepository.sumGroupedByCategoryAndType(startDate, endDate);
+        List<Object[]> rows = transactionRepository.sumGroupedByCategoryAndType(ownerId, startDate, endDate);
 
         List<CategoryStatistics> incomeRows = new ArrayList<>();
         List<CategoryStatistics> expenseRows = new ArrayList<>();
@@ -62,8 +62,8 @@ public class StatisticsService {
         );
     }
 
-    public AnnualStatisticsResponse getAnnualStatistics(int year) {
-        List<Object[]> rows = transactionRepository.sumByMonthAndType(year);
+    public AnnualStatisticsResponse getAnnualStatistics(Long ownerId, int year) {
+        List<Object[]> rows = transactionRepository.sumByMonthAndType(ownerId, year);
 
         Map<Integer, BigDecimal> incomeByMonth = new HashMap<>();
         Map<Integer, BigDecimal> expenseByMonth = new HashMap<>();
@@ -93,13 +93,13 @@ public class StatisticsService {
                 totalIncome.subtract(totalExpense), monthly);
     }
 
-    public CategoryTrendResponse getCategoryTrend(Long categoryId, int months) {
+    public CategoryTrendResponse getCategoryTrend(Long ownerId, Long categoryId, int months) {
         LocalDate today     = LocalDate.now();
         LocalDate endDate   = today.withDayOfMonth(today.lengthOfMonth());
         LocalDate startDate = today.withDayOfMonth(1).minusMonths(months - 1L);
 
         List<Object[]> rows = transactionRepository.sumByYearMonthForCategory(
-                categoryId, startDate, endDate);
+                ownerId, categoryId, startDate, endDate);
 
         List<CategoryTrendResponse.MonthAmount> trend = rows.stream()
                 .map(row -> new CategoryTrendResponse.MonthAmount(
@@ -108,7 +108,7 @@ public class StatisticsService {
                         (BigDecimal) row[2]))
                 .toList();
 
-        String categoryName = transactionRepository.sumGroupedByCategoryAndType(startDate, endDate)
+        String categoryName = transactionRepository.sumGroupedByCategoryAndType(ownerId, startDate, endDate)
                 .stream()
                 .filter(r -> ((Long) r[1]).equals(categoryId))
                 .map(r -> (String) r[2])

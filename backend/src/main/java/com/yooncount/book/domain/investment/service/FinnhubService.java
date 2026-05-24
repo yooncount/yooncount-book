@@ -25,8 +25,8 @@ public class FinnhubService {
                 .build();
     }
 
-    public StockQuoteResponse getQuote(String ticker, String stockName) {
-        String apiKey = appSettingService.get(AppSettingService.KEY_FINNHUB_API_KEY)
+    public StockQuoteResponse getQuote(Long ownerId, String ticker, String stockName) {
+        String apiKey = appSettingService.get(ownerId, AppSettingService.KEY_FINNHUB_API_KEY)
                 .orElseThrow(() -> new BusinessException(ErrorCode.FINNHUB_API_KEY_NOT_CONFIGURED));
 
         @SuppressWarnings("unchecked")

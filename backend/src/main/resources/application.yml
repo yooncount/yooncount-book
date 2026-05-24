@@ -18,6 +18,15 @@ github:
   repo-owner: ${GITHUB_REPO_OWNER:ps-suihn-yoon}
   repo-name: ${GITHUB_REPO_NAME:yooncount-book}
 
+app:
+  jwt:
+    secret: ${JWT_SECRET:}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}  # 24h
+  crypto:
+    # base64로 인코딩된 32바이트(256-bit) 키. 생성: openssl rand -base64 32
+    # 분실 시 DB의 모든 암호화 값 복호화 불가 — 안전한 곳에 백업 필수
+    key: ${APP_ENCRYPTION_KEY:}
+
 
 springdoc:
   api-docs:

@@ -30,12 +30,12 @@ public class AssetService {
         this.loanRepository = loanRepository;
     }
 
-    public AssetSummaryResponse getSummary() {
-        BigDecimal totalIncome  = transactionRepository.sumTotalByType(TransactionType.INCOME);
-        BigDecimal totalExpense = transactionRepository.sumTotalByType(TransactionType.EXPENSE);
+    public AssetSummaryResponse getSummary(Long ownerId) {
+        BigDecimal totalIncome  = transactionRepository.sumTotalByType(ownerId, TransactionType.INCOME);
+        BigDecimal totalExpense = transactionRepository.sumTotalByType(ownerId, TransactionType.EXPENSE);
         BigDecimal cashBalance  = totalIncome.subtract(totalExpense);
 
-        List<PortfolioResponse> portfolio = investmentService.getPortfolio();
+        List<PortfolioResponse> portfolio = investmentService.getPortfolio(ownerId);
 
         BigDecimal stockInvestment = portfolio.stream()
                 .filter(p -> p.holdingQuantity() > 0)
@@ -48,7 +48,7 @@ public class AssetService {
 
         BigDecimal grossAssets = cashBalance.add(stockInvestment).add(realizedStockPnl);
 
-        BigDecimal totalDebt = loanRepository.sumRemainingBalanceIncludedInAssets();
+        BigDecimal totalDebt = loanRepository.sumRemainingBalanceIncludedInAssets(ownerId);
         BigDecimal netAssets = grossAssets.subtract(totalDebt);
 
         List<StockAssetSummary> stockPortfolio = portfolio.stream()
@@ -56,7 +56,7 @@ public class AssetService {
                 .map(StockAssetSummary::from)
                 .toList();
 
-        List<LoanResponse> loans = loanRepository.findAllByOrderByCreatedAtDesc()
+        List<LoanResponse> loans = loanRepository.findAllByOwnerIdOrderByCreatedAtDesc(ownerId)
                 .stream()
                 .map(LoanResponse::from)
                 .toList();

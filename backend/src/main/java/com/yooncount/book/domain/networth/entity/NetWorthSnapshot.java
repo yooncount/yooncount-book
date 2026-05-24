@@ -1,10 +1,14 @@
 package com.yooncount.book.domain.networth.entity;
 
+import com.yooncount.book.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -19,6 +23,10 @@ public class NetWorthSnapshot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User owner;
 
     @Column(name = "snapshot_date", nullable = false)
     private LocalDate snapshotDate;
@@ -50,10 +58,11 @@ public class NetWorthSnapshot {
 
     protected NetWorthSnapshot() {}
 
-    public NetWorthSnapshot(LocalDate snapshotDate, BigDecimal cashBalance,
+    public NetWorthSnapshot(User owner, LocalDate snapshotDate, BigDecimal cashBalance,
                             BigDecimal stockInvestment, BigDecimal realizedStockPnl,
                             BigDecimal grossAssets, BigDecimal totalDebt,
                             BigDecimal netAssets, String memo) {
+        this.owner = owner;
         this.snapshotDate = snapshotDate;
         this.cashBalance = cashBalance;
         this.stockInvestment = stockInvestment;
@@ -65,6 +74,7 @@ public class NetWorthSnapshot {
     }
 
     public Long getId() { return id; }
+    public User getOwner() { return owner; }
     public LocalDate getSnapshotDate() { return snapshotDate; }
     public BigDecimal getCashBalance() { return cashBalance; }
     public BigDecimal getStockInvestment() { return stockInvestment; }

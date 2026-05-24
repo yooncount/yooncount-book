@@ -7,6 +7,8 @@ import com.yooncount.book.domain.payment.entity.PaymentMethod;
 import com.yooncount.book.domain.payment.entity.PaymentMethodType;
 import com.yooncount.book.domain.payment.repository.PaymentMethodRepository;
 import com.yooncount.book.domain.transaction.repository.TransactionRepository;
+import com.yooncount.book.domain.user.entity.User;
+import com.yooncount.book.domain.user.repository.UserRepository;
 import com.yooncount.book.global.exception.BusinessException;
 import com.yooncount.book.global.exception.ErrorCode;
 import org.springframework.stereotype.Service;
@@ -25,47 +27,51 @@ public class PaymentMethodService {
 
     private final PaymentMethodRepository paymentMethodRepository;
     private final TransactionRepository transactionRepository;
+    private final UserRepository userRepository;
 
     public PaymentMethodService(PaymentMethodRepository paymentMethodRepository,
-                                TransactionRepository transactionRepository) {
+                                TransactionRepository transactionRepository,
+                                UserRepository userRepository) {
         this.paymentMethodRepository = paymentMethodRepository;
         this.transactionRepository = transactionRepository;
+        this.userRepository = userRepository;
     }
 
-    public List<PaymentMethodResponse> getAll() {
-        return paymentMethodRepository.findAll()
+    public List<PaymentMethodResponse> getAll(Long ownerId) {
+        return paymentMethodRepository.findAllByOwnerId(ownerId)
                 .stream()
                 .map(PaymentMethodResponse::from)
                 .toList();
     }
 
     @Transactional
-    public PaymentMethodResponse create(PaymentMethodRequest request) {
+    public PaymentMethodResponse create(Long ownerId, PaymentMethodRequest request) {
+        User owner = userRepository.getReferenceById(ownerId);
         return PaymentMethodResponse.from(
-                paymentMethodRepository.save(new PaymentMethod(request.name(), request.type()))
+                paymentMethodRepository.save(new PaymentMethod(owner, request.name(), request.type()))
         );
     }
 
     @Transactional
-    public PaymentMethodResponse update(Long id, PaymentMethodRequest request) {
-        PaymentMethod pm = findById(id);
+    public PaymentMethodResponse update(Long ownerId, Long id, PaymentMethodRequest request) {
+        PaymentMethod pm = findByIdAndOwnerId(ownerId, id);
         pm.update(request.name(), request.type());
         return PaymentMethodResponse.from(pm);
     }
 
     @Transactional
-    public void delete(Long id) {
-        if (!paymentMethodRepository.existsById(id)) {
+    public void delete(Long ownerId, Long id) {
+        if (!paymentMethodRepository.existsByIdAndOwnerId(id, ownerId)) {
             throw new BusinessException(ErrorCode.PAYMENT_METHOD_NOT_FOUND);
         }
         paymentMethodRepository.deleteById(id);
     }
 
-    public List<PaymentMethodStatsResponse> getStats(int year, int month) {
+    public List<PaymentMethodStatsResponse> getStats(Long ownerId, int year, int month) {
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
-        List<Object[]> rows = transactionRepository.sumByPaymentMethodAndCategory(startDate, endDate);
+        List<Object[]> rows = transactionRepository.sumByPaymentMethodAndCategory(ownerId, startDate, endDate);
 
         // Group by paymentMethodId preserving order
         Map<Long, PaymentMethodStatsBuilder> map = new LinkedHashMap<>();
@@ -86,8 +92,8 @@ public class PaymentMethodService {
                 .toList();
     }
 
-    private PaymentMethod findById(Long id) {
-        return paymentMethodRepository.findById(id)
+    private PaymentMethod findByIdAndOwnerId(Long ownerId, Long id) {
+        return paymentMethodRepository.findByIdAndOwnerId(id, ownerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_METHOD_NOT_FOUND));
     }
 

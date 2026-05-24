@@ -1,10 +1,14 @@
 package com.yooncount.book.domain.loan.entity;
 
+import com.yooncount.book.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -20,6 +24,10 @@ public class Loan {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User owner;
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -58,9 +66,10 @@ public class Loan {
 
     protected Loan() {}
 
-    public Loan(String name, String lender, BigDecimal principal, BigDecimal remainingBalance,
+    public Loan(User owner, String name, String lender, BigDecimal principal, BigDecimal remainingBalance,
                 BigDecimal interestRate, LocalDate startDate, LocalDate endDate,
                 boolean includeInAssets, String memo) {
+        this.owner = owner;
         this.name = name;
         this.lender = lender;
         this.principal = principal;
@@ -91,6 +100,7 @@ public class Loan {
     }
 
     public Long getId() { return id; }
+    public User getOwner() { return owner; }
     public String getName() { return name; }
     public String getLender() { return lender; }
     public BigDecimal getPrincipal() { return principal; }

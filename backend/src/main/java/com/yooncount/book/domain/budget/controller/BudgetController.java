@@ -4,10 +4,12 @@ import com.yooncount.book.domain.budget.dto.BudgetRequest;
 import com.yooncount.book.domain.budget.dto.BudgetResponse;
 import com.yooncount.book.domain.budget.service.BudgetService;
 import com.yooncount.book.global.common.ApiResponse;
+import com.yooncount.book.global.security.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,22 +35,26 @@ public class BudgetController {
     @GetMapping
     @Operation(summary = "월별 예산 조회", description = "해당 월의 예산 목록과 실사용 금액, 달성률을 반환합니다.")
     public ResponseEntity<ApiResponse<List<BudgetResponse>>> findByMonth(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
             @RequestParam int year,
             @RequestParam int month) {
-        return ResponseEntity.ok(ApiResponse.ok(budgetService.findByMonth(year, month)));
+        return ResponseEntity.ok(ApiResponse.ok(budgetService.findByMonth(principal.getId(), year, month)));
     }
 
     @PostMapping
     @Operation(summary = "예산 설정", description = "예산을 등록하거나 수정합니다. 같은 카테고리/연월이면 금액을 덮어씁니다.")
     public ResponseEntity<ApiResponse<BudgetResponse>> save(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
             @RequestBody @Valid BudgetRequest request) {
-        return ResponseEntity.ok(ApiResponse.ok(budgetService.save(request)));
+        return ResponseEntity.ok(ApiResponse.ok(budgetService.save(principal.getId(), request)));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "예산 삭제")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
-        budgetService.delete(id);
+    public ResponseEntity<ApiResponse<Void>> delete(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
+            @PathVariable Long id) {
+        budgetService.delete(principal.getId(), id);
         return ResponseEntity.ok(ApiResponse.ok());
     }
 }
