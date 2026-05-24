@@ -38,6 +38,12 @@ public enum ErrorCode {
     // Savings Goal
     SAVINGS_GOAL_NOT_FOUND(HttpStatus.NOT_FOUND, "저축 목표를 찾을 수 없습니다."),
 
+    // Finnhub
+    FINNHUB_API_KEY_NOT_CONFIGURED(HttpStatus.SERVICE_UNAVAILABLE,
+            "Finnhub API 키가 설정되지 않았습니다. " +
+            "application-local.yml의 finnhub.api-key를 설정해주세요. " +
+            "(https://finnhub.io 에서 무료 발급 가능)"),
+
     // GitHub
     GITHUB_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "GitHub 이슈 등록에 실패했습니다.");
 

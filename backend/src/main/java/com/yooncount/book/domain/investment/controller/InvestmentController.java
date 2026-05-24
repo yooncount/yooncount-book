@@ -1,8 +1,10 @@
 package com.yooncount.book.domain.investment.controller;
 
 import com.yooncount.book.domain.investment.dto.PortfolioResponse;
+import com.yooncount.book.domain.investment.dto.StockQuoteResponse;
 import com.yooncount.book.domain.investment.dto.StockTransactionRequest;
 import com.yooncount.book.domain.investment.dto.StockTransactionResponse;
+import com.yooncount.book.domain.investment.service.FinnhubService;
 import com.yooncount.book.domain.investment.service.InvestmentService;
 import com.yooncount.book.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,9 +29,11 @@ import java.util.List;
 public class InvestmentController {
 
     private final InvestmentService investmentService;
+    private final FinnhubService finnhubService;
 
-    public InvestmentController(InvestmentService investmentService) {
+    public InvestmentController(InvestmentService investmentService, FinnhubService finnhubService) {
         this.investmentService = investmentService;
+        this.finnhubService = finnhubService;
     }
 
     @GetMapping("/transactions")
@@ -53,6 +57,17 @@ public class InvestmentController {
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         investmentService.delete(id);
         return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    @GetMapping("/quote")
+    @Operation(summary = "주식 현재가 조회 (Finnhub)",
+               description = "Finnhub API로 실시간 주가를 조회합니다. " +
+                             "한국 주식은 티커 뒤에 .KS 를 붙이세요 (예: 005930.KS). " +
+                             "Finnhub API 키가 설정되지 않은 경우 503과 함께 등록 안내를 반환합니다.")
+    public ResponseEntity<ApiResponse<StockQuoteResponse>> getQuote(
+            @RequestParam String ticker,
+            @RequestParam(defaultValue = "") String stockName) {
+        return ResponseEntity.ok(ApiResponse.ok(finnhubService.getQuote(ticker, stockName)));
     }
 
     @GetMapping("/portfolio")
