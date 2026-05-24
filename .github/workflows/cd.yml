@@ -78,3 +78,43 @@ jobs:
           tags: ${{ steps.meta-web.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Server
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: yooncount-book
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Copy docker-compose.yml to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_SSH_PORT || 22 }}
+          source: docker-compose.yml
+          target: ${{ secrets.DEPLOY_PATH }}
+
+      - name: Pull latest images and restart
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_SSH_PORT || 22 }}
+          command_timeout: 10m
+          script: |
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}
+            if [ ! -f .env ]; then
+              echo "ERROR: .env not found at ${{ secrets.DEPLOY_PATH }}/.env"
+              echo "Create it from .env.example and fill in real values before first deploy."
+              exit 1
+            fi
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker image prune -f
