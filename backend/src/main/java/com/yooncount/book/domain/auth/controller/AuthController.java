@@ -3,6 +3,8 @@ package com.yooncount.book.domain.auth.controller;
 import com.yooncount.book.domain.auth.dto.AuthResponse;
 import com.yooncount.book.domain.auth.dto.LoginRequest;
 import com.yooncount.book.domain.auth.dto.PasswordChangeRequest;
+import com.yooncount.book.domain.auth.dto.PasswordResetRequest;
+import com.yooncount.book.domain.auth.dto.SecurityQuestionResponse;
 import com.yooncount.book.domain.auth.dto.SignupRequest;
 import com.yooncount.book.domain.auth.dto.UserResponse;
 import com.yooncount.book.domain.auth.service.AuthService;
@@ -14,11 +16,13 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -57,6 +61,29 @@ public class AuthController {
             @AuthenticationPrincipal CustomUserPrincipal principal,
             @RequestBody @Valid PasswordChangeRequest request) {
         authService.changePassword(principal.getId(), request);
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    @DeleteMapping("/me")
+    @Operation(summary = "회원 탈퇴 (soft delete)")
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(
+            @AuthenticationPrincipal CustomUserPrincipal principal) {
+        authService.deleteAccount(principal.getId());
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    @GetMapping("/password-reset/question")
+    @Operation(summary = "비번 초기화: 등록된 보안 질문 조회 (인증 불필요)")
+    public ResponseEntity<ApiResponse<SecurityQuestionResponse>> getSecurityQuestion(
+            @RequestParam String email) {
+        return ResponseEntity.ok(ApiResponse.ok(authService.lookupSecurityQuestion(email)));
+    }
+
+    @PostMapping("/password-reset")
+    @Operation(summary = "비번 초기화: 보안 답변 일치 시 비번을 '0000'으로 재설정 (인증 불필요)")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @RequestBody @Valid PasswordResetRequest request) {
+        authService.resetPassword(request);
         return ResponseEntity.ok(ApiResponse.ok());
     }
 }

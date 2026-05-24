@@ -40,13 +40,13 @@ const Login: React.FC = () => {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">이메일</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">아이디</label>
             <input
-              type="email"
-              autoComplete="email"
-              {...register('email', { required: '이메일을 입력하세요' })}
+              type="text"
+              autoComplete="username"
+              {...register('email', { required: '아이디를 입력하세요' })}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-              placeholder="you@example.com"
+              placeholder="아이디"
             />
             {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
           </div>
@@ -73,10 +73,17 @@ const Login: React.FC = () => {
           </Button>
         </form>
 
-        <p className="text-xs text-gray-500 text-center mt-6">
-          아직 계정이 없으신가요?{' '}
-          <Link to="/signup" className="text-blue-600 hover:underline">회원가입</Link>
-        </p>
+        <div className="text-xs text-gray-500 text-center mt-6 space-y-1">
+          <p>
+            아직 계정이 없으신가요?{' '}
+            <Link to="/signup" className="text-blue-600 hover:underline">회원가입</Link>
+          </p>
+          <p>
+            <Link to="/password-reset" className="text-gray-400 hover:text-gray-600 hover:underline">
+              비밀번호를 잊으셨나요?
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   )

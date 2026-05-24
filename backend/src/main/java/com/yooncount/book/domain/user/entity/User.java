@@ -34,8 +34,17 @@ public class User {
     @Column(nullable = false, length = 20)
     private UserRole role;
 
+    @Column(name = "security_question", length = 255)
+    private String securityQuestion;
+
+    @Column(name = "security_answer", length = 255)
+    private String securityAnswer; // BCrypt 해시
+
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -47,11 +56,14 @@ public class User {
 
     protected User() {}
 
-    public User(String email, String passwordHash, String name, UserRole role) {
+    public User(String email, String passwordHash, String name, UserRole role,
+                String securityQuestion, String securityAnswerHash) {
         this.email = email;
         this.password = passwordHash;
         this.name = name;
         this.role = role;
+        this.securityQuestion = securityQuestion;
+        this.securityAnswer = securityAnswerHash;
     }
 
     public void updateName(String name) {
@@ -62,8 +74,21 @@ public class User {
         this.password = passwordHash;
     }
 
+    public void updateSecurity(String question, String answerHash) {
+        this.securityQuestion = question;
+        this.securityAnswer = answerHash;
+    }
+
     public void touchLoginAt() {
         this.lastLoginAt = LocalDateTime.now();
+    }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
     }
 
     public Long getId() { return id; }
@@ -71,7 +96,10 @@ public class User {
     public String getPassword() { return password; }
     public String getName() { return name; }
     public UserRole getRole() { return role; }
+    public String getSecurityQuestion() { return securityQuestion; }
+    public String getSecurityAnswer() { return securityAnswer; }
     public LocalDateTime getLastLoginAt() { return lastLoginAt; }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

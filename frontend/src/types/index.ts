@@ -27,10 +27,16 @@ export interface SignupRequest {
   email: string
   password: string
   name: string
+  securityQuestion: string
+  securityAnswer: string
 }
 export interface PasswordChangeRequest {
   currentPassword: string
   newPassword: string
+}
+export interface PasswordResetRequest {
+  email: string
+  securityAnswer: string
 }
 
 // Transaction

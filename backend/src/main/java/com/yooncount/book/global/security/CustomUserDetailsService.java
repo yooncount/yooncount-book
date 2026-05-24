@@ -17,13 +17,14 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmailAndDeletedAtIsNull(email)
                 .map(CustomUserPrincipal::from)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
     }
 
     public CustomUserPrincipal loadById(Long id) {
         return userRepository.findById(id)
+                .filter(u -> !u.isDeleted())
                 .map(CustomUserPrincipal::from)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found id: " + id));
     }

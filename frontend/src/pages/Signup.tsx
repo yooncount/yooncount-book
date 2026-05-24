@@ -26,7 +26,7 @@ const Signup: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
         <div className="mb-6 text-center">
           <h1 className="text-xl font-bold text-blue-600">YoonCount Book</h1>
@@ -46,16 +46,16 @@ const Signup: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">이메일</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">아이디</label>
             <input
-              type="email"
-              autoComplete="email"
+              type="text"
+              autoComplete="username"
               {...register('email', {
-                required: '이메일을 입력하세요',
-                pattern: { value: /.+@.+/, message: '올바른 이메일 형식이 아닙니다' },
+                required: '아이디를 입력하세요',
+                maxLength: { value: 255, message: '255자 이하' },
               })}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-              placeholder="you@example.com"
+              placeholder="아이디 또는 이메일"
             />
             {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
           </div>
@@ -73,6 +73,34 @@ const Signup: React.FC = () => {
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
             />
             {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>}
+          </div>
+
+          <div className="pt-2 border-t border-gray-100">
+            <p className="text-xs text-gray-500 mb-2">비밀번호 분실 시 사용됩니다. 답을 잘 기억하세요.</p>
+            <label className="block text-sm font-medium text-gray-700 mb-1">보안 질문</label>
+            <input
+              type="text"
+              {...register('securityQuestion', {
+                required: '보안 질문을 입력하세요',
+                maxLength: { value: 255, message: '255자 이하' },
+              })}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+              placeholder="예: 첫 반려동물 이름은?"
+            />
+            {errors.securityQuestion && <p className="text-xs text-red-500 mt-1">{errors.securityQuestion.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">보안 답변</label>
+            <input
+              type="text"
+              {...register('securityAnswer', {
+                required: '보안 답변을 입력하세요',
+                maxLength: { value: 255, message: '255자 이하' },
+              })}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+            />
+            {errors.securityAnswer && <p className="text-xs text-red-500 mt-1">{errors.securityAnswer.message}</p>}
           </div>
 
           {errorMsg && (

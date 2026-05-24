@@ -3,6 +3,7 @@ import type {
   AuthResponse,
   LoginRequest,
   PasswordChangeRequest,
+  PasswordResetRequest,
   SignupRequest,
   User,
 } from '../types'
@@ -24,4 +25,17 @@ export const getMe = async (): Promise<User> => {
 
 export const changePassword = async (body: PasswordChangeRequest): Promise<void> => {
   await client.put('/auth/me/password', body)
+}
+
+export const deleteAccount = async (): Promise<void> => {
+  await client.delete('/auth/me')
+}
+
+export const lookupSecurityQuestion = async (email: string): Promise<string> => {
+  const { data } = await client.get('/auth/password-reset/question', { params: { email } })
+  return (data.data ?? data).question
+}
+
+export const resetPassword = async (body: PasswordResetRequest): Promise<void> => {
+  await client.post('/auth/password-reset', body)
 }

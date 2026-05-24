@@ -1,17 +1,35 @@
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Shield, User as UserIcon, Mail, Calendar, Clock } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { changePassword } from '../api/auth'
+import { changePassword, deleteAccount } from '../api/auth'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
 import type { PasswordChangeRequest } from '../types'
 
 const Profile: React.FC = () => {
+  const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { register, handleSubmit, reset, formState: { errors } } = useForm<PasswordChangeRequest>()
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const onDeleteAccount = async () => {
+    setDeleting(true)
+    try {
+      await deleteAccount()
+      logout()
+      navigate('/login', { replace: true })
+    } catch (e) {
+      setMessage({ type: 'error', text: (e as Error).message })
+      setDeleting(false)
+      setDeleteOpen(false)
+    }
+  }
 
   if (!user) return null
 
@@ -129,6 +147,27 @@ const Profile: React.FC = () => {
         <p className="text-sm text-gray-500 mb-4">이 기기에서 로그아웃합니다.</p>
         <Button variant="secondary" onClick={logout}>로그아웃</Button>
       </Card>
+
+      <Card>
+        <h3 className="text-base font-semibold text-red-600 mb-3">회원 탈퇴</h3>
+        <p className="text-sm text-gray-500 mb-4">
+          탈퇴하면 로그인이 차단되며 가계부 데이터는 보존되지만 더 이상 접근할 수 없습니다.
+        </p>
+        <Button
+          variant="secondary"
+          onClick={() => setDeleteOpen(true)}
+          className="text-red-600 border-red-200 hover:bg-red-50"
+        >
+          회원 탈퇴
+        </Button>
+      </Card>
+
+      <ConfirmDialog
+        isOpen={deleteOpen}
+        onClose={() => !deleting && setDeleteOpen(false)}
+        onConfirm={onDeleteAccount}
+        message={`정말로 "${user.name}" 계정을 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+      />
     </div>
   )
 }

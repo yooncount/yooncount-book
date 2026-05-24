@@ -19,6 +19,7 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Profile from './pages/Profile'
 import Admin from './pages/Admin'
+import PasswordReset from './pages/PasswordReset'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/password-reset" element={<PasswordReset />} />
 
           <Route
             path="/"
