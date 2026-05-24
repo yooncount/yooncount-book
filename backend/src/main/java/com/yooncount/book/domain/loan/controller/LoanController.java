@@ -60,7 +60,7 @@ public class LoanController {
         return ResponseEntity.ok(ApiResponse.ok(loanService.update(id, request)));
     }
 
-    @PatchMapping("/{id}/toggle")
+    @PatchMapping("/{id}/toggle-include")
     @Operation(summary = "총자산 포함 여부 토글",
                description = "대출을 총자산 계산에 포함할지(부채로 차감) 여부를 전환합니다.")
     public ResponseEntity<ApiResponse<LoanResponse>> toggleIncludeInAssets(@PathVariable Long id) {

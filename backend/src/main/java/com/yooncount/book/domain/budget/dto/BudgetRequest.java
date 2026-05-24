@@ -23,5 +23,5 @@ public record BudgetRequest(
 
         @NotNull(message = "예산 금액을 입력해주세요.")
         @Positive(message = "예산 금액은 0보다 커야 합니다.")
-        BigDecimal amount
+        BigDecimal budgetAmount
 ) {}

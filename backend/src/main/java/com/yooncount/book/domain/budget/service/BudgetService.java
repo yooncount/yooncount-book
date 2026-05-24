@@ -48,13 +48,13 @@ public class BudgetService {
         Budget budget = budgetRepository
                 .findByCategoryIdAndYearAndMonth(request.categoryId(), request.year(), request.month())
                 .map(existing -> {
-                    existing.updateAmount(request.amount());
+                    existing.updateAmount(request.budgetAmount());
                     return existing;
                 })
                 .orElseGet(() -> {
                     Category category = categoryRepository.findById(request.categoryId())
                             .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
-                    return budgetRepository.save(new Budget(category, request.year(), request.month(), request.amount()));
+                    return budgetRepository.save(new Budget(category, request.year(), request.month(), request.budgetAmount()));
                 });
 
         Map<Long, BigDecimal> spentMap = getSpentMapForMonth(request.year(), request.month());

@@ -35,7 +35,7 @@ public class NetWorthSnapshotController {
         return ResponseEntity.ok(ApiResponse.ok(snapshotService.getAll()));
     }
 
-    @PostMapping("/snapshot")
+    @PostMapping("/snapshots")
     @Operation(summary = "현재 순자산 스냅샷 저장",
                description = "현재 자산 요약을 기반으로 스냅샷을 생성합니다. snapshotDate 미입력 시 오늘 날짜.")
     public ResponseEntity<ApiResponse<NetWorthSnapshotResponse>> capture(

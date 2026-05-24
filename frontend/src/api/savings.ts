@@ -34,7 +34,7 @@ export const deleteSavingsGoal = async (id: number): Promise<void> => {
 }
 
 export const depositSavingsGoal = async (id: number, amount: number): Promise<SavingsGoal> => {
-  const { data } = await client.post(`/savings-goals/${id}/deposit`, { amount })
+  const { data } = await client.patch(`/savings-goals/${id}/deposit`, { amount })
   return data.data ?? data
 }
 
