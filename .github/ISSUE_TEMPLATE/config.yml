@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discussions (일반 논의)
+    url: https://github.com/ps-suihn-yoon/yooncount-book/discussions
+    about: 이슈로 분류하기 애매한 아이디어나 일반적인 대화는 Discussions를 이용해 주세요.
+  - name: 📖 Wiki
+    url: https://github.com/ps-suihn-yoon/yooncount-book/wiki
+    about: API 문서, 개발 환경 설정 등 프로젝트 문서는 Wiki에서 확인해 주세요.

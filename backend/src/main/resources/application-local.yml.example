@@ -1,0 +1,31 @@
+# 이 파일을 복사해서 application-local.yml 로 저장 후 사용하세요.
+# application-local.yml 은 .gitignore 에 포함되어 git 에 올라가지 않습니다.
+
+spring:
+  datasource:
+
+    # --- PostgreSQL 사용 시 ---
+    url: jdbc:postgresql://localhost:5432/yooncount_book
+    username: yooncount
+    password: your_password
+    driver-class-name: org.postgresql.Driver
+
+    # --- MySQL 사용 시 (위 PostgreSQL 설정을 주석 처리 후 사용) ---
+    # url: jdbc:mysql://localhost:3306/yooncount_book?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    # username: yooncount
+    # password: your_password
+    # driver-class-name: com.mysql.cj.jdbc.Driver
+
+# -------------------------------------------------------------------
+# Finnhub API Key (주식 현재가 조회 기능에 필요)
+# -------------------------------------------------------------------
+# 1. https://finnhub.io 에서 무료 계정 생성
+# 2. Dashboard > API Key 에서 키 복사
+# 3. 아래 your_finnhub_api_key 를 실제 키로 교체
+#
+# 무료 플랜: 분당 60회 요청 가능 (개인 사용에 충분)
+# 한국 주식 티커 예시: 005930.KS (삼성전자), 035720.KS (카카오)
+# 미국 주식 티커 예시: AAPL, TSLA, NVDA
+# -------------------------------------------------------------------
+finnhub:
+  api-key: your_finnhub_api_key

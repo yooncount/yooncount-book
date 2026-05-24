@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: yooncount
+      POSTGRES_USER: ${DB_USER:-yooncount}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-yooncount}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-yooncount} -d yooncount"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: yooncount/yooncount-book-api:latest
+    restart: unless-stopped
+    ports:
+      - "8080:28080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/yooncount
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:yooncount}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:yooncount}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      GITHUB_REPO_OWNER: ${GITHUB_REPO_OWNER:-ps-suihn-yoon}
+      GITHUB_REPO_NAME: ${GITHUB_REPO_NAME:-yooncount-book}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    image: yooncount/yooncount-book-web:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:

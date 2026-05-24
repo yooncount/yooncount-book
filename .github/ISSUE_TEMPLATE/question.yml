@@ -1,0 +1,66 @@
+name: 💬 Question
+description: 코드, 설계, 사용법에 대해 질문해 주세요.
+title: "[QUESTION] "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        질문을 환영합니다!
+        제출 전에 **README, Wiki, 기존 이슈**에서 먼저 답을 찾아보셨나요?
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: 질문 분류
+      description: 질문의 성격을 선택해 주세요.
+      options:
+        - 🏗️ 설계 / 아키텍처
+        - 🔌 API 사용법
+        - 🔧 개발 환경 설정
+        - 🤔 코드 이해
+        - 💡 구현 방향 논의
+        - 기타
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: 질문 내용
+      description: 궁금한 내용을 구체적으로 작성해 주세요.
+      placeholder: 예) Transaction 삭제 시 soft delete와 hard delete 중 어떤 방식을 사용하는 건가요?
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: 시도해 본 것
+      description: 문제 해결을 위해 직접 시도해 본 내용이 있다면 작성해 주세요. (선택)
+      placeholder: |
+        예)
+        - soft delete 방식으로 구현해 봤으나 조회 쿼리마다 deleted_at IS NULL 조건 추가가 번거로웠습니다.
+        - @SQLRestriction 어노테이션을 찾아봤으나 이 프로젝트에서 사용 중인지 불확실합니다.
+    validations:
+      required: false
+
+  - type: textarea
+    id: references
+    attributes:
+      label: 참고 자료
+      description: 참고한 문서, 링크, 코드 위치 등을 첨부해 주세요. (선택)
+      placeholder: |
+        예)
+        - 관련 코드: `TransactionService.java#L45`
+        - 참고 링크: https://...
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 추가 정보
+      description: 그 외 전달하고 싶은 내용이 있다면 작성해 주세요. (선택)
+    validations:
+      required: false

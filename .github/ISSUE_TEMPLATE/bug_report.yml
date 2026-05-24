@@ -1,0 +1,97 @@
+name: 🐛 Bug Report
+description: 버그나 예상치 못한 동작을 제보해 주세요.
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        버그를 제보해 주셔서 감사합니다.
+        이슈를 제출하기 전에 **동일한 버그가 이미 등록되어 있지 않은지** 확인해 주세요.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 버그 설명
+      description: 발생한 버그를 명확하고 구체적으로 설명해 주세요.
+      placeholder: 예) 가계부 내역 등록 시 금액이 음수로 저장되는 문제가 발생합니다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 재현 방법
+      description: 버그를 재현할 수 있는 단계를 순서대로 작성해 주세요.
+      placeholder: |
+        1. POST /api/v1/transactions 요청
+        2. 요청 바디에 amount: 5000 입력
+        3. 응답 확인
+        4. DB에서 -5000으로 저장된 것을 확인
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 예상 결과
+      description: 정상적으로 동작했다면 어떤 결과가 나왔어야 하나요?
+      placeholder: 예) amount: 5000이 그대로 저장되어야 합니다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 실제 결과
+      description: 실제로 어떤 결과가 발생했나요?
+      placeholder: 예) amount: -5000으로 저장되었습니다.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 심각도
+      description: 버그의 심각도를 선택해 주세요.
+      options:
+        - 🔴 Critical - 서비스 전체에 영향
+        - 🟠 High - 핵심 기능 동작 불가
+        - 🟡 Medium - 일부 기능 영향
+        - 🟢 Low - 사소한 불편
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 환경 정보
+      description: 문제가 발생한 환경을 작성해 주세요.
+      value: |
+        - OS:
+        - Java 버전:
+        - Spring Boot 버전:
+        - DB:
+        - 브라우저 (프론트엔드 문제인 경우):
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 로그 / 스크린샷
+      description: 관련 로그, 에러 메시지, 스크린샷을 첨부해 주세요. (선택)
+      placeholder: |
+        ```
+        ERROR: ...
+        ```
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 추가 정보
+      description: 그 외 참고할 만한 정보가 있다면 작성해 주세요. (선택)
+    validations:
+      required: false

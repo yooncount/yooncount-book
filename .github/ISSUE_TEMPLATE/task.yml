@@ -1,0 +1,75 @@
+name: 📋 Task
+description: 개발 작업, 리팩토링, 인프라 작업 등을 등록해 주세요.
+title: "[TASK] "
+labels: ["task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        개발 작업 이슈입니다. 구현, 리팩토링, 배포, 문서화 등 기능과 직접 관련 없는 작업에 사용해 주세요.
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: 작업 목표
+      description: 이 작업을 통해 달성하려는 목표를 작성해 주세요.
+      placeholder: 예) Transaction 도메인 서비스 레이어 단위 테스트 작성
+    validations:
+      required: true
+
+  - type: textarea
+    id: checklist
+    attributes:
+      label: 작업 체크리스트
+      description: 완료해야 할 세부 작업 목록을 작성해 주세요.
+      value: |
+        - [ ]
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 완료 조건 (Definition of Done)
+      description: 이 이슈를 닫을 수 있는 완료 기준을 작성해 주세요.
+      placeholder: |
+        예)
+        - 단위 테스트 커버리지 80% 이상
+        - CI 파이프라인 통과
+        - PR 리뷰 승인
+    validations:
+      required: true
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: 작업 유형
+      options:
+        - ⚙️ 구현
+        - ♻️ 리팩토링
+        - 🧪 테스트
+        - 📄 문서화
+        - 🚀 배포 / 인프라
+        - 🔧 설정 / 환경
+        - 🗑️ 제거 / 정리
+    validations:
+      required: true
+
+  - type: input
+    id: related_issue
+    attributes:
+      label: 관련 이슈
+      description: 연관된 이슈 번호를 입력해 주세요. (선택)
+      placeholder: "예) #12, #34"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 추가 정보
+      description: 작업 배경, 참고 자료, 주의사항 등을 작성해 주세요. (선택)
+    validations:
+      required: false
