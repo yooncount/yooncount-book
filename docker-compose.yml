@@ -25,7 +25,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-yooncount}
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_FLYWAY_ENABLED: "true"
-      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-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}
       GITHUB_REPO_OWNER: ${GITHUB_REPO_OWNER:-ps-suihn-yoon}
       GITHUB_REPO_NAME: ${GITHUB_REPO_NAME:-yooncount-book}
     depends_on:
