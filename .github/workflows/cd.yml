@@ -12,6 +12,7 @@ jobs:
   build-and-push:
     name: Build & Push to DockerHub
     runs-on: ubuntu-latest
+    environment: yooncount-book
 
     steps:
       - name: Checkout
