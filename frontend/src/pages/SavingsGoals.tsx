@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import dayjs from 'dayjs'
 import { Plus, Pencil, Trash2, CheckCircle, PlusCircle } from 'lucide-react'
 import {
@@ -19,6 +19,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import Badge from '../components/ui/Badge'
 import ProgressBar from '../components/ui/ProgressBar'
+import AmountInput from '../components/ui/AmountInput'
 import { formatAmount, formatDate, formatPercent } from '../utils/format'
 
 interface GoalFormValues {
@@ -45,11 +46,11 @@ const SavingsGoals: React.FC = () => {
     queryFn: getSavingsGoals,
   })
 
-  const { register: registerGoal, handleSubmit: handleSubmitGoal, reset: resetGoal, setValue } = useForm<GoalFormValues>({
+  const { register: registerGoal, handleSubmit: handleSubmitGoal, reset: resetGoal, setValue, control: controlGoal } = useForm<GoalFormValues>({
     defaultValues: { targetDate: dayjs().add(1, 'year').format('YYYY-MM-DD') },
   })
 
-  const { register: registerDeposit, handleSubmit: handleSubmitDeposit, reset: resetDeposit } = useForm<DepositFormValues>()
+  const { handleSubmit: handleSubmitDeposit, reset: resetDeposit, control: controlDeposit } = useForm<DepositFormValues>()
 
   const createMutation = useMutation({
     mutationFn: createSavingsGoal,
@@ -251,11 +252,18 @@ const SavingsGoals: React.FC = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">목표 금액 *</label>
-            <input
-              type="number"
-              {...registerGoal('targetAmount', { required: true, min: 1 })}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-              placeholder="0"
+            <Controller
+              control={controlGoal}
+              name="targetAmount"
+              rules={{ required: '목표 금액을 입력하세요', min: { value: 1, message: '1 이상' } }}
+              render={({ field }) => (
+                <AmountInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="0"
+                />
+              )}
             />
           </div>
           <div>
@@ -300,11 +308,18 @@ const SavingsGoals: React.FC = () => {
           </p>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">적립 금액 *</label>
-            <input
-              type="number"
-              {...registerDeposit('amount', { required: true, min: 1 })}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-              placeholder="0"
+            <Controller
+              control={controlDeposit}
+              name="amount"
+              rules={{ required: '적립 금액을 입력하세요', min: { value: 1, message: '1 이상' } }}
+              render={({ field }) => (
+                <AmountInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="0"
+                />
+              )}
             />
           </div>
           <div className="flex justify-end gap-3 pt-2">

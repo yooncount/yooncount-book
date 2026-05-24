@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { Plus, Pencil, Trash2, Landmark } from 'lucide-react'
 import { getLoans, createLoan, updateLoan, deleteLoan, toggleLoanInclude } from '../api/loans'
 import type { LoanResponse } from '../types'
@@ -9,6 +9,7 @@ import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import AmountInput from '../components/ui/AmountInput'
 import { formatAmount, formatDate } from '../utils/format'
 import dayjs from 'dayjs'
 
@@ -35,7 +36,7 @@ const Loans: React.FC = () => {
     queryFn: getLoans,
   })
 
-  const { register, handleSubmit, reset, setValue } = useForm<FormValues>({
+  const { register, handleSubmit, reset, setValue, control } = useForm<FormValues>({
     defaultValues: {
       startDate: dayjs().format('YYYY-MM-DD'),
       includeInAssets: true,
@@ -256,20 +257,34 @@ const Loans: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">원금 *</label>
-              <input
-                type="number"
-                {...register('principal', { required: true, min: 0 })}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                placeholder="0"
+              <Controller
+                control={control}
+                name="principal"
+                rules={{ required: '원금을 입력하세요', min: { value: 0, message: '0 이상' } }}
+                render={({ field }) => (
+                  <AmountInput
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="0"
+                  />
+                )}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">잔여 잔액 *</label>
-              <input
-                type="number"
-                {...register('remainingBalance', { required: true, min: 0 })}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                placeholder="0"
+              <Controller
+                control={control}
+                name="remainingBalance"
+                rules={{ required: '잔여 잔액을 입력하세요', min: { value: 0, message: '0 이상' } }}
+                render={({ field }) => (
+                  <AmountInput
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="0"
+                  />
+                )}
               />
             </div>
           </div>

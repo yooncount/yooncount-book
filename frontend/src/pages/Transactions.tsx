@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import dayjs from 'dayjs'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import {
@@ -18,6 +18,7 @@ import Modal from '../components/ui/Modal'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import Badge from '../components/ui/Badge'
+import AmountInput from '../components/ui/AmountInput'
 import { formatAmount, formatDate, formatPaymentType } from '../utils/format'
 
 const now = dayjs()
@@ -62,7 +63,7 @@ const Transactions: React.FC = () => {
     queryFn: getPaymentMethods,
   })
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm<FormValues>({
+  const { register, handleSubmit, control, reset, setValue, watch } = useForm<FormValues>({
     defaultValues: {
       type: 'EXPENSE',
       transactionDate: dayjs().format('YYYY-MM-DD'),
@@ -302,11 +303,18 @@ const Transactions: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">금액 *</label>
-              <input
-                type="number"
-                {...register('amount', { required: true, min: 1 })}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                placeholder="0"
+              <Controller
+                control={control}
+                name="amount"
+                rules={{ required: '금액을 입력하세요', min: { value: 1, message: '1원 이상' } }}
+                render={({ field }) => (
+                  <AmountInput
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="0"
+                  />
+                )}
               />
             </div>
           </div>

@@ -1,5 +1,6 @@
 package com.yooncount.book.domain.investment.controller;
 
+import com.yooncount.book.domain.investment.dto.PortfolioQuoteResponse;
 import com.yooncount.book.domain.investment.dto.PortfolioResponse;
 import com.yooncount.book.domain.investment.dto.StockQuoteResponse;
 import com.yooncount.book.domain.investment.dto.StockTransactionRequest;
@@ -83,5 +84,14 @@ public class InvestmentController {
     public ResponseEntity<ApiResponse<List<PortfolioResponse>>> getPortfolio(
             @AuthenticationPrincipal CustomUserPrincipal principal) {
         return ResponseEntity.ok(ApiResponse.ok(investmentService.getPortfolio(principal.getId())));
+    }
+
+    @GetMapping("/portfolio/quotes")
+    @Operation(summary = "포트폴리오 + 현재가 일괄 조회",
+               description = "보유 종목 전체의 현재가를 Finnhub에서 가져와 평가금액/평가손익/총손익까지 계산해 반환합니다. " +
+                             "종목별로 시세 조회가 실패하면 quoteError 필드에 사유가 채워지고 다른 종목은 정상 표시됩니다.")
+    public ResponseEntity<ApiResponse<List<PortfolioQuoteResponse>>> getPortfolioWithQuotes(
+            @AuthenticationPrincipal CustomUserPrincipal principal) {
+        return ResponseEntity.ok(ApiResponse.ok(investmentService.getPortfolioWithQuotes(principal.getId())));
     }
 }

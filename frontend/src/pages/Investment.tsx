@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { Plus, Search, Trash2 } from 'lucide-react'
+import { useForm, Controller } from 'react-hook-form'
+import { Plus, RefreshCw, Search, Trash2 } from 'lucide-react'
 import {
-  getPortfolio,
+  getPortfolioWithQuotes,
   getStockTransactions,
   createStockTransaction,
   deleteStockTransaction,
@@ -16,6 +16,7 @@ import Modal from '../components/ui/Modal'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import Badge from '../components/ui/Badge'
+import AmountInput from '../components/ui/AmountInput'
 import { formatAmount, formatDate, formatTradeType } from '../utils/format'
 import dayjs from 'dayjs'
 
@@ -39,10 +40,16 @@ const Investment: React.FC = () => {
   const [quoteInput, setQuoteInput] = useState('')
   const [quoteTicker, setQuoteTicker] = useState('')
 
-  const { data: portfolio = [], isLoading: portfolioLoading } = useQuery({
-    queryKey: ['portfolio'],
-    queryFn: getPortfolio,
+  const {
+    data: portfolio = [],
+    isLoading: portfolioLoading,
+    isFetching: portfolioFetching,
+    refetch: refetchPortfolio,
+  } = useQuery({
+    queryKey: ['portfolio-quotes'],
+    queryFn: getPortfolioWithQuotes,
     enabled: tab === 'portfolio',
+    staleTime: 60_000,
   })
 
   const { data: stockTxs = [], isLoading: txLoading } = useQuery({
@@ -58,7 +65,7 @@ const Investment: React.FC = () => {
     retry: false,
   })
 
-  const { register, handleSubmit, reset } = useForm<TxFormValues>({
+  const { register, handleSubmit, reset, control } = useForm<TxFormValues>({
     defaultValues: { type: 'BUY', tradedAt: dayjs().format('YYYY-MM-DD') },
   })
 
@@ -66,7 +73,7 @@ const Investment: React.FC = () => {
     mutationFn: createStockTransaction,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['stock-transactions'] })
-      qc.invalidateQueries({ queryKey: ['portfolio'] })
+      qc.invalidateQueries({ queryKey: ['portfolio-quotes'] })
       setModalOpen(false)
       reset()
     },
@@ -76,7 +83,7 @@ const Investment: React.FC = () => {
     mutationFn: deleteStockTransaction,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['stock-transactions'] })
-      qc.invalidateQueries({ queryKey: ['portfolio'] })
+      qc.invalidateQueries({ queryKey: ['portfolio-quotes'] })
       setDeleteTarget(null)
     },
   })
@@ -118,44 +125,139 @@ const Investment: React.FC = () => {
       {/* Portfolio Tab */}
       {tab === 'portfolio' && (
         portfolioLoading ? <LoadingSpinner /> : (
-          <Card title="보유 종목">
-            {portfolio.length === 0 ? (
-              <p className="text-center text-gray-400 py-12">보유 종목이 없습니다.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-gray-500 border-b border-gray-100">
-                      <th className="pb-3 font-medium">티커</th>
-                      <th className="pb-3 font-medium">종목명</th>
-                      <th className="pb-3 font-medium text-right">보유 수량</th>
-                      <th className="pb-3 font-medium text-right">평균 매수가</th>
-                      <th className="pb-3 font-medium text-right">총 투자금</th>
-                      <th className="pb-3 font-medium text-right">실현 손익</th>
-                      <th className="pb-3 font-medium text-right">손익률</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {portfolio.map((p) => (
-                      <tr key={p.ticker} className="border-b border-gray-50 hover:bg-gray-50">
-                        <td className="py-3 font-medium text-blue-600">{p.ticker}</td>
-                        <td className="py-3 text-gray-800">{p.stockName}</td>
-                        <td className="py-3 text-right">{p.holdingQuantity.toLocaleString()}</td>
-                        <td className="py-3 text-right text-gray-600">{formatAmount(p.avgPurchasePrice)}</td>
-                        <td className="py-3 text-right font-medium">{formatAmount(p.totalInvestment)}</td>
-                        <td className={`py-3 text-right font-medium ${p.realizedPnl > 0 ? 'text-green-600' : p.realizedPnl < 0 ? 'text-red-500' : 'text-gray-500'}`}>
-                          {p.realizedPnl === 0 ? '-' : formatAmount(p.realizedPnl)}
-                        </td>
-                        <td className={`py-3 text-right ${p.realizedPnlRate > 0 ? 'text-green-600' : p.realizedPnlRate < 0 ? 'text-red-500' : 'text-gray-500'}`}>
-                          {p.realizedPnl === 0 ? '-' : `${p.realizedPnlRate >= 0 ? '+' : ''}${p.realizedPnlRate.toFixed(2)}%`}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Card>
+          <>
+            {(() => {
+              const sumInvestment = portfolio.reduce((s, p) => s + p.totalInvestment, 0)
+              const sumMarketValue = portfolio.reduce((s, p) => s + (p.marketValue ?? 0), 0)
+              const sumUnrealized = portfolio.reduce((s, p) => s + (p.unrealizedPnl ?? 0), 0)
+              const sumRealized = portfolio.reduce((s, p) => s + p.realizedPnl, 0)
+              const sumTotal = sumRealized + sumUnrealized
+              const sumTotalRate = sumInvestment > 0 ? (sumTotal / sumInvestment) * 100 : 0
+              const hasQuoteError = portfolio.some((p) => p.quoteError)
+
+              if (portfolio.length === 0) {
+                return (
+                  <Card title="보유 종목">
+                    <p className="text-center text-gray-400 py-12">보유 종목이 없습니다.</p>
+                  </Card>
+                )
+              }
+
+              return (
+                <>
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="bg-white border border-gray-100 rounded-xl p-4">
+                      <p className="text-xs text-gray-500">총 투자금</p>
+                      <p className="text-xl font-bold text-gray-900 mt-1">{formatAmount(sumInvestment)}</p>
+                    </div>
+                    <div className="bg-white border border-gray-100 rounded-xl p-4">
+                      <p className="text-xs text-gray-500">현재 평가금액</p>
+                      <p className="text-xl font-bold text-gray-900 mt-1">{formatAmount(sumMarketValue)}</p>
+                    </div>
+                    <div className="bg-white border border-gray-100 rounded-xl p-4">
+                      <p className="text-xs text-gray-500">평가손익(미실현)</p>
+                      <p className={`text-xl font-bold mt-1 ${sumUnrealized > 0 ? 'text-green-600' : sumUnrealized < 0 ? 'text-red-500' : 'text-gray-900'}`}>
+                        {sumUnrealized >= 0 ? '+' : ''}{formatAmount(sumUnrealized)}
+                      </p>
+                    </div>
+                    <div className="bg-white border border-gray-100 rounded-xl p-4">
+                      <p className="text-xs text-gray-500">총 손익 (실현+평가)</p>
+                      <p className={`text-xl font-bold mt-1 ${sumTotal > 0 ? 'text-green-600' : sumTotal < 0 ? 'text-red-500' : 'text-gray-900'}`}>
+                        {sumTotal >= 0 ? '+' : ''}{formatAmount(sumTotal)}
+                      </p>
+                      <p className={`text-xs mt-0.5 ${sumTotalRate > 0 ? 'text-green-600' : sumTotalRate < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                        {sumTotalRate >= 0 ? '+' : ''}{sumTotalRate.toFixed(2)}%
+                      </p>
+                    </div>
+                  </div>
+
+                  <Card>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-base font-semibold text-gray-900">보유 종목</h3>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => refetchPortfolio()}
+                        disabled={portfolioFetching}
+                      >
+                        <RefreshCw size={13} className={portfolioFetching ? 'animate-spin' : ''} />
+                        시세 새로고침
+                      </Button>
+                    </div>
+
+                    {hasQuoteError && (
+                      <p className="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded p-2 mb-3">
+                        일부 종목의 시세 조회에 실패했습니다. Finnhub API 키와 티커 형식(한국주는 005930.KS)을 확인하세요.
+                      </p>
+                    )}
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-left text-gray-500 border-b border-gray-100">
+                            <th className="pb-3 font-medium">티커</th>
+                            <th className="pb-3 font-medium">종목명</th>
+                            <th className="pb-3 font-medium text-right">수량</th>
+                            <th className="pb-3 font-medium text-right">평단가</th>
+                            <th className="pb-3 font-medium text-right">현재가</th>
+                            <th className="pb-3 font-medium text-right">총 투자금</th>
+                            <th className="pb-3 font-medium text-right">평가금액</th>
+                            <th className="pb-3 font-medium text-right">평가손익</th>
+                            <th className="pb-3 font-medium text-right">총 손익</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {portfolio.map((p) => (
+                            <tr key={p.ticker} className="border-b border-gray-50 hover:bg-gray-50">
+                              <td className="py-3 font-medium text-blue-600">{p.ticker}</td>
+                              <td className="py-3 text-gray-800">{p.stockName}</td>
+                              <td className="py-3 text-right">{p.holdingQuantity.toLocaleString()}</td>
+                              <td className="py-3 text-right text-gray-600">{formatAmount(p.avgPurchasePrice)}</td>
+                              <td className="py-3 text-right">
+                                {p.currentPrice != null ? (
+                                  <span className="text-gray-800">{formatAmount(p.currentPrice)}</span>
+                                ) : (
+                                  <span className="text-xs text-amber-600" title={p.quoteError ?? ''}>조회실패</span>
+                                )}
+                              </td>
+                              <td className="py-3 text-right font-medium">{formatAmount(p.totalInvestment)}</td>
+                              <td className="py-3 text-right font-medium">
+                                {p.marketValue != null ? formatAmount(p.marketValue) : '-'}
+                              </td>
+                              <td className={`py-3 text-right font-medium ${p.unrealizedPnl == null ? 'text-gray-400' : p.unrealizedPnl > 0 ? 'text-green-600' : p.unrealizedPnl < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                                {p.unrealizedPnl == null ? '-' : (
+                                  <>
+                                    {p.unrealizedPnl >= 0 ? '+' : ''}{formatAmount(p.unrealizedPnl)}
+                                    {p.unrealizedPnlRate != null && (
+                                      <span className="block text-xs">
+                                        {p.unrealizedPnlRate >= 0 ? '+' : ''}{p.unrealizedPnlRate.toFixed(2)}%
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                              </td>
+                              <td className={`py-3 text-right font-medium ${p.totalPnl > 0 ? 'text-green-600' : p.totalPnl < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                                {p.totalPnl === 0 ? '-' : (
+                                  <>
+                                    {p.totalPnl >= 0 ? '+' : ''}{formatAmount(p.totalPnl)}
+                                    {p.totalPnlRate != null && (
+                                      <span className="block text-xs">
+                                        {p.totalPnlRate >= 0 ? '+' : ''}{p.totalPnlRate.toFixed(2)}%
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </Card>
+                </>
+              )
+            })()}
+          </>
         )
       )}
 
@@ -345,30 +447,42 @@ const Investment: React.FC = () => {
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">수량 *</label>
-              <input
-                type="number"
-                {...register('quantity', { required: true, min: 1 })}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                placeholder="0"
+              <Controller
+                control={control}
+                name="quantity"
+                rules={{ required: '수량을 입력하세요', min: { value: 1, message: '1 이상' } }}
+                render={({ field }) => (
+                  <AmountInput
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    showKorean={false}
+                    placeholder="0"
+                  />
+                )}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">가격 *</label>
-              <input
-                type="number"
-                {...register('price', { required: true, min: 0 })}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                placeholder="0"
+              <Controller
+                control={control}
+                name="price"
+                rules={{ required: '가격을 입력하세요', min: { value: 0, message: '0 이상' } }}
+                render={({ field }) => (
+                  <AmountInput value={field.value} onChange={field.onChange} onBlur={field.onBlur} placeholder="0" />
+                )}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">수수료</label>
-              <input
-                type="number"
-                {...register('fee', { min: 0 })}
+              <Controller
+                control={control}
+                name="fee"
                 defaultValue={0}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                placeholder="0"
+                rules={{ min: { value: 0, message: '0 이상' } }}
+                render={({ field }) => (
+                  <AmountInput value={field.value} onChange={field.onChange} onBlur={field.onBlur} placeholder="0" />
+                )}
               />
             </div>
           </div>

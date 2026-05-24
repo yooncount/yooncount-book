@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import dayjs from 'dayjs'
 import { Plus, Trash2 } from 'lucide-react'
 import { getBudgets, createBudget, deleteBudget } from '../api/budget'
@@ -11,6 +11,7 @@ import Modal from '../components/ui/Modal'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import ProgressBar from '../components/ui/ProgressBar'
+import AmountInput from '../components/ui/AmountInput'
 import { formatAmount, formatPercent } from '../utils/format'
 import type { BudgetResponse } from '../types'
 
@@ -42,7 +43,7 @@ const Budget: React.FC = () => {
   const usedCategoryIds = new Set(budgets.map((b) => b.categoryId))
   const availableCategories = expenseCategories.filter((c) => !usedCategoryIds.has(c.id))
 
-  const { register, handleSubmit, reset } = useForm<FormValues>()
+  const { register, handleSubmit, control, reset } = useForm<FormValues>()
 
   const createMutation = useMutation({
     mutationFn: (values: FormValues) =>
@@ -180,11 +181,18 @@ const Budget: React.FC = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">예산 금액 *</label>
-            <input
-              type="number"
-              {...register('budgetAmount', { required: true, min: 1 })}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-              placeholder="0"
+            <Controller
+              control={control}
+              name="budgetAmount"
+              rules={{ required: '예산 금액을 입력하세요', min: { value: 1, message: '1원 이상' } }}
+              render={({ field }) => (
+                <AmountInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="0"
+                />
+              )}
             />
           </div>
           <div className="flex justify-end gap-3 pt-2">

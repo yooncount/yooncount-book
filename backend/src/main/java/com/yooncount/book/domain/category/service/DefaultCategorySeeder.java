@@ -20,10 +20,11 @@ public class DefaultCategorySeeder {
             new Default("쇼핑", TransactionType.EXPENSE),
             new Default("통신", TransactionType.EXPENSE),
             new Default("교육", TransactionType.EXPENSE),
+            new Default("저축", TransactionType.EXPENSE),
+            new Default("투자", TransactionType.EXPENSE),
             new Default("기타지출", TransactionType.EXPENSE),
             new Default("급여", TransactionType.INCOME),
             new Default("부수입", TransactionType.INCOME),
-            new Default("투자", TransactionType.INCOME),
             new Default("기타수입", TransactionType.INCOME)
     );
 
