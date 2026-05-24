@@ -5,6 +5,34 @@ export interface ApiResponse<T> {
   data: T
 }
 
+// Auth
+export type UserRole = 'USER' | 'ADMIN'
+export interface User {
+  id: number
+  email: string
+  name: string
+  role: UserRole
+  createdAt: string
+  lastLoginAt?: string
+}
+export interface AuthResponse {
+  token: string
+  user: User
+}
+export interface LoginRequest {
+  email: string
+  password: string
+}
+export interface SignupRequest {
+  email: string
+  password: string
+  name: string
+}
+export interface PasswordChangeRequest {
+  currentPassword: string
+  newPassword: string
+}
+
 // Transaction
 export type TransactionType = 'INCOME' | 'EXPENSE'
 export interface Transaction {
